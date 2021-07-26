@@ -4,7 +4,8 @@
   <arg name="gpu" default="-1" />
   <arg name="use_usb_cam" default="false" />
   <arg name="INPUT_IMAGE" default="/usb_cam/image_raw" />
-
+  <arg name="compressed" default="0" />
+  
   <node name="usb_cam" pkg="usb_cam" type="usb_cam_node" 
         if="$(arg use_usb_cam)" />
 
@@ -15,6 +16,7 @@
     <arg name="gui" value="$(arg gui)" />
     <arg name="gpu" value="$(arg gpu)" />
     <arg name="INPUT_IMAGE" value="$(arg INPUT_IMAGE)" />
+    <arg name="compressed" value="$(arg compressed)" />
   </include>
 
 </launch>
