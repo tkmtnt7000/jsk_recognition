@@ -42,7 +42,7 @@ from geometry_msgs.msg import Pose
 from jsk_recognition_msgs.msg import HandPose
 from jsk_recognition_msgs.msg import HandPoseArray
 from jsk_topic_tools import ConnectionBasedTransport
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import Image, CompressedImage
 
 
 class HandPoseEstimation2D(ConnectionBasedTransport):
@@ -117,7 +117,8 @@ class HandPoseEstimation2D(ConnectionBasedTransport):
         self.hand_pose_pub = self.advertise(
             '~output/pose', HandPoseArray, queue_size=1)
         self.bridge = cv_bridge.CvBridge()
-
+        self.compressed = rospy.get_param('~compressed', 0)
+        
     @property
     def visualize(self):
         return self.image_pub.get_num_connections() > 0
@@ -165,8 +166,12 @@ class HandPoseEstimation2D(ConnectionBasedTransport):
         return osp.join(pkgpath, filepath)
 
     def subscribe(self):
-        sub_img = rospy.Subscriber(
-            '~input', Image, self._cb, queue_size=1, buff_size=2**24)
+        if self.compressed == 1:
+            sub_img = rospy.Subscriber(
+                '~input', CompressedImage, self._cb, queue_size=1, buff_size=2**24)
+        else:
+            sub_img = rospy.Subscriber(
+                '~input', Image, self._cb, queue_size=1, buff_size=2**24)
         self.subs = [sub_img]
 
     def unsubscribe(self):
@@ -174,8 +179,12 @@ class HandPoseEstimation2D(ConnectionBasedTransport):
             sub.unregister()
 
     def _cb(self, img_msg):
-        img = self.bridge.imgmsg_to_cv2(
-            img_msg, desired_encoding='bgr8')
+        if self.compressed == 1:
+            img = self.bridge.compressed_imgmsg_to_cv2(
+                img_msg, desired_encoding='bgr8')
+        else:
+            img = self.bridge.imgmsg_to_cv2(
+                img_msg, desired_encoding='bgr8')
         hands_points, hands_point_scores, hands_score = \
             self.hand_pose_estimate(img)
 
