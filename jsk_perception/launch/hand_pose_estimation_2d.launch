@@ -3,11 +3,13 @@
   <arg name="gui" default="true" />
   <arg name="gpu" default="-1" />
   <arg name="INPUT_IMAGE" default="/usb_cam/image_raw" />
-
+  <arg name="compressed" default="0" />
+  
   <node name="hand_pose_estimation_2d"
         pkg="jsk_perception" type="hand_pose_estimation_2d.py"
         output="screen">
     <remap from="~input" to="$(arg INPUT_IMAGE)" />
+    <param name="~compressed" value="$(arg compressed)"/>
     <rosparam subst_value="true">
       gpu: $(arg gpu)
       model_file: $(find jsk_perception)/trained_data/SRHandNet.pts
