@@ -52,6 +52,12 @@ namespace jsk_perception
     srv_->setCallback (f);
 
     pub_ = advertise<sensor_msgs::Image>(*pnh_, "output", 1);
+
+    pnh_->param("area", area, 1);
+    pnh_->param("x", x, 0);
+    pnh_->param("y", y, 0);
+    pnh_->param("width", width, 100);
+    pnh_->param("height", height, 100);
     onInitPostProcess();
   }
 
@@ -86,11 +92,53 @@ namespace jsk_perception
     cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy(
       image_msg, image_msg->encoding);
     cv::Mat image = cv_ptr->image;
-    cv::Mat applied_image;
-    if (kernel_size_ % 2 == 1) {
-      cv::GaussianBlur(image, applied_image, cv::Size(kernel_size_, kernel_size_), sigma_x_, sigma_y_);
+    cv::Mat applied_image = image.clone();
+    // int width=sub_.width;
+    // int height=sub_.height;
+    if (area){
+      cv::Rect roi(x, y, width, height);
+      if (kernel_size_ % 2 == 1) {
+        cv::GaussianBlur(
+          image(roi), applied_image(roi), cv::Size(kernel_size_, kernel_size_),
+          sigma_x_, sigma_y_);
+      } else {
+        cv::GaussianBlur(
+          image(roi), applied_image(roi), cv::Size(kernel_size_+1, kernel_size_+1),
+          sigma_x_, sigma_y_);
+      }
     } else {
-      cv::GaussianBlur(image, applied_image, cv::Size(kernel_size_+1, kernel_size_+1), sigma_x_, sigma_y_);
+      if (kernel_size_ % 2 == 1) {
+        cv::GaussianBlur(
+          image, applied_image, cv::Size(kernel_size_, kernel_size_),
+          sigma_x_, sigma_y_);
+      } else {
+        cv::GaussianBlur(
+          image, applied_image, cv::Size(kernel_size_+1, kernel_size_+1),
+          sigma_x_, sigma_y_);
+      }
+    }
+    if (area){
+      //applied_image = applied_image.clone();
+      cv::Rect roi(200, 200, width, height);
+      if (kernel_size_ % 2 == 1) {
+        cv::GaussianBlur(
+          image(roi), applied_image(roi), cv::Size(kernel_size_, kernel_size_),
+          sigma_x_, sigma_y_);
+      } else {
+        cv::GaussianBlur(
+          image(roi), applied_image(roi), cv::Size(kernel_size_+1, kernel_size_+1),
+          sigma_x_, sigma_y_);
+      }
+    } else {
+      if (kernel_size_ % 2 == 1) {
+        cv::GaussianBlur(
+          image, applied_image, cv::Size(kernel_size_, kernel_size_),
+          sigma_x_, sigma_y_);
+      } else {
+        cv::GaussianBlur(
+          image, applied_image, cv::Size(kernel_size_+1, kernel_size_+1),
+          sigma_x_, sigma_y_);
+      }
     }
     pub_.publish(cv_bridge::CvImage(
                      image_msg->header,
