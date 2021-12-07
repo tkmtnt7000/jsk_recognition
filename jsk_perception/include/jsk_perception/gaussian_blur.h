@@ -63,6 +63,11 @@ namespace jsk_perception
     int kernel_size_;
     double sigma_x_;
     double sigma_y_;
+    int area;
+    int x;
+    int y;
+    int width;
+    int height;
   private:
 
   };
