@@ -86,11 +86,15 @@ namespace jsk_perception
     cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy(
       image_msg, image_msg->encoding);
     cv::Mat image = cv_ptr->image;
-    cv::Mat applied_image;
+    cv::Rect roi(390, 124, 110, 100);
+    cv::Mat applied_image = image.clone();
+    cv::Mat s_roi = image(roi);
+    cv::Mat d_roi = applied_image(roi);
+    //cv::Mat applied_image;
     if (kernel_size_ % 2 == 1) {
-      cv::GaussianBlur(image, applied_image, cv::Size(kernel_size_, kernel_size_), sigma_x_, sigma_y_);
+      cv::GaussianBlur(image, d_roi, cv::Size(kernel_size_, kernel_size_), sigma_x_, sigma_y_);
     } else {
-      cv::GaussianBlur(image, applied_image, cv::Size(kernel_size_+1, kernel_size_+1), sigma_x_, sigma_y_);
+      cv::GaussianBlur(image, d_roi, cv::Size(kernel_size_+1, kernel_size_+1), sigma_x_, sigma_y_);
     }
     pub_.publish(cv_bridge::CvImage(
                      image_msg->header,
