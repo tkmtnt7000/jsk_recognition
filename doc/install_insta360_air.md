@@ -13,6 +13,15 @@ sudo cp udev/99-insta360-air.rules /etc/udev/rules.d/
 sudo service udev restart
 ```
 
+## Install libuvc_camera
+
+```bash
+# For melodic or newer
+sudo apt install ros-$ROS_DISTRO-libuvc-camera
+```
+
+usb_cam is used instead of libuvc_camera in kinetic or older distribution.
+
 ## Sample
 
 ```bash
