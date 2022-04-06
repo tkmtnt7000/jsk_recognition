@@ -50,7 +50,7 @@ Publishing Topic
 
 * ``~attributes`` (``jsk_recognition_msgs/ClassificationResult``)
 
-   Attributes of the face, such as emotions, presence of beard, sunglasses, and so on, with confidence.
+  Attributes of the face, such as emotions, presence of beard, sunglasses, and so on, with confidence.
 
 * ``~landmarks`` (``jsk_recognition_msgs/PeoplePoseArray``)
 
