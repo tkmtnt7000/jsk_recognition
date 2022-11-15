@@ -152,6 +152,8 @@ generate_dynamic_reconfigure_options(
   cfg/AWSDetectFaces.cfg
   cfg/RemoveBlurredFrames.cfg
   cfg/VideoToScene.cfg
+  cfg/OFA.cfg
+  cfg/Clip.cfg
 )
 
 message(WARNING "DEPRECATION WARNING: srv files in jsk_pcl_ros are deprecated."
