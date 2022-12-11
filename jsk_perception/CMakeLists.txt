@@ -154,6 +154,7 @@ generate_dynamic_reconfigure_options(
   cfg/VideoToScene.cfg
   cfg/OFA.cfg
   cfg/Clip.cfg
+  cfg/VQA.cfg
 )
 
 message(WARNING "DEPRECATION WARNING: srv files in jsk_pcl_ros are deprecated."
