@@ -152,8 +152,6 @@ generate_dynamic_reconfigure_options(
   cfg/AWSDetectFaces.cfg
   cfg/RemoveBlurredFrames.cfg
   cfg/VideoToScene.cfg
-  cfg/OFA.cfg
-  cfg/Clip.cfg
   cfg/VQA.cfg
   cfg/Classification.cfg
 )
