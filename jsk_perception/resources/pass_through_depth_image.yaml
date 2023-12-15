@@ -1,0 +1,9 @@
+# quit
+- name: Start
+  service: '/head_camera/depth_registered/pass_through_depth_image/request'
+  column: 0
+  service_type: 'Empty'
+- name: Stop
+  service: '/head_camera/depth_registered/pass_through_depth_image/stop'
+  column: 0
+  service_type: 'Empty'

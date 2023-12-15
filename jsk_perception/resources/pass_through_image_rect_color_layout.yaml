@@ -1,0 +1,9 @@
+# quit
+- name: Start
+  service: '/head_camera/rgb/pass_through_image_rect_color/request'
+  column: 0
+  service_type: 'Empty'
+- name: Stop
+  service: '/head_camera/rgb/pass_through_image_rect_color/stop'
+  column: 0
+  service_type: 'Empty'

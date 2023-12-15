@@ -1,0 +1,6 @@
+<launch>
+  <node name="dummy_button"
+        pkg="jsk_rqt_plugins" type="rqt_tabbed_buttons" output="screen" clear_params="true">
+    <rosparam command="load" file="$(find jsk_perception)/resources/dummy_tabbed_layout.yaml" />
+  </node>
+</launch>

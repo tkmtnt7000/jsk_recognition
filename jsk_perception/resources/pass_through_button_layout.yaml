@@ -1,0 +1,19 @@
+tabbed_layout:
+  tab_list:
+    - image_rect_color
+    - depth_image
+  image_rect_color:
+    name: 'image_rect_color'
+    namespace: push
+    type: push
+    yaml_file: 'package://jsk_perception/resources/pass_through_image_rect_color_layout.yaml'
+  depth_image:
+    name: 'depth_image'
+    namespace: push
+    type: push
+    yaml_file: 'package://jsk_perception/resources/pass_through_depth_image.yaml'
+  # bottom_contact:
+  #   name: 'Bottom contact'
+  #   namespace: push
+  #   type: push
+  #   yaml_file: 'package://rmui_drivers/resource/rmui0/contact_sensor_button_layout.yaml'
