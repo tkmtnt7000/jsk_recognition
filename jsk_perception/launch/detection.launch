@@ -5,13 +5,83 @@
   <arg name="gui" default="false" />
   <arg name="run_api" default="false" />
   <arg name="model" default="dino" />
-  <arg name="DETECTION_INPUT_IMAGE" default="image" />
+  <arg name="ns" default="detection" />
+  <arg name="DETECTION_INPUT_IMAGE" default="/$(arg ns)/decompressed_image" />
+  <arg name="LOAD_STATEMENT" default="load" />
+  <arg name="MANAGER" default="detection_manager" />
+  <arg name="input_image" default="/head_camera/rgb/pass_through_output_detection_image_rect_color"/>
+  <arg name="input_depth" default="/head_camera/depth_registered/pass_through_output_detection_image"/>
+  <arg name="input_camera_info" default="/head_camera/rgb/camera_info"/>
+
+  <!-- <arg name="_input_image" default="/$(arg namespace)/decompressed_image"/> -->
+  <!-- <arg name="_input_depth" default="/$(arg namespace)/decompressed_depth"/> -->
+  <arg name="_input_image" default="/$(arg ns)/decompressed_image"/>
+  <arg name="_input_depth" default="/$(arg ns)/decompressed_depth"/>
+
+
+  <arg name="target_frame_id" default="base_link" />
 
   <node name="detection_api" pkg="jsk_perception" type="run_jsk_vil_api" output="log"
         args="$(arg model) -p $(arg port)" if="$(arg run_api)" />
 
+  <group ns="$(arg ns)">
+    <node name="$(arg MANAGER)" pkg="nodelet" type="nodelet" args="manager"/>
+  </group>
+
+  <!-- passthrough image_rect_color -->
+  <group ns="/head_camera/rgb">
+    <node name="pass_through_image_rect_color"
+          pkg="nodelet" type="nodelet"
+          args="load jsk_topic_tools/Passthrough /$(arg ns)/$(arg MANAGER)"
+          output="screen">
+      <remap from="~input" to="image_rect_color/compressed"/>
+      <remap from="~output" to="pass_through_output_detection_image_rect_color/compressed"/>
+      <rosparam>
+        default_duration: 0.0
+      </rosparam>
+    </node>
+  </group>
+
+  <!-- passthrough depth -->
+  <group ns="/head_camera/depth_registered">
+    <node name="pass_through_depth_image"
+          pkg="nodelet" type="nodelet"
+          args="load jsk_topic_tools/Passthrough /$(arg ns)/$(arg MANAGER)"
+          output="screen">
+      <remap from="~input" to="image/compressedDepth"/>
+      <remap from="~output" to="pass_through_output_detection_image/compressedDepth"/>
+      <rosparam>
+        default_duration: 0.0
+      </rosparam>
+    </node>
+  </group>
+
+  <group ns="detection">
+    <include file="$(find jsk_perception)/launch/decompress_depth.launch">
+      <arg name="input_image" value="$(arg input_image)"/>
+      <arg name="input_depth" value="$(arg input_depth)"/>
+      <rosparam>
+        queue_size: 100
+      </rosparam>
+    </include>
+
+
+    <!-- Create pointcloud from image and depth -->
+    <node pkg="nodelet" type="nodelet" name="decompress_points"
+          args="$(arg LOAD_STATEMENT) depth_image_proc/point_cloud_xyzrgb $(arg MANAGER)">
+      <remap from="rgb/camera_info" to="$(arg input_camera_info)"/>
+      <remap from="rgb/image_rect_color" to="$(arg _input_image)"/>
+      <remap from="depth_registered/image_rect" to="$(arg _input_depth)"/>
+      <rosparam>
+        queue_size: 100
+      </rosparam>
+    </node>
+  </group>
+
+  <!-- Grounding DINO -->
   <node name="detection" pkg="jsk_perception" type="detection_node.py" output="screen">
     <remap from="~image" to="$(arg DETECTION_INPUT_IMAGE)" />
+    <remap from="~rects" to="~rects" />
     <rosparam subst_value="true">
       host: $(arg host)
       port: $(arg port)
@@ -19,6 +89,59 @@
     </rosparam>
   </node>
 
+  <node name="rects_to_cpi"
+        pkg="jsk_recognition_utils" type="rect_array_to_cluster_point_indices.py"
+        output="screen">
+    <remap from="~input" to="detection/rects"/>
+    <remap from="~output" to="detection/indices" />
+    <rosparam>
+      use_info: false
+      img_height: 480
+      img_width: 640
+    </rosparam>
+  </node>
+
+  <node name="detection_euclidian_clustering"
+        pkg="nodelet" type="nodelet"
+        args="$(arg LOAD_STATEMENT) jsk_pcl/EuclideanClustering /$(arg ns)/$(arg MANAGER)"
+        clear_params="true">
+    <remap from="~input" to="/detection/depth_registered/points"/>
+    <remap from="~input/cluster_indices" to="detection/indices"/>
+    <rosparam>
+      multi: true
+      tolerance: 0.03
+      min_size: 100           <!--200 -->
+      downsample_enable: true
+      approximate_sync: true
+      queue_size: 100
+    </rosparam>
+  </node>
+
+  <node name="detection_cluster_point_indices_decomposer"
+        pkg="nodelet" type="nodelet"
+        args="$(arg LOAD_STATEMENT) jsk_pcl/ClusterPointIndicesDecomposer /$(arg ns)/$(arg MANAGER)"
+        clear_params="true">
+    <remap from="~input" to="/$(arg ns)/depth_registered/points"/>
+    <remap from="~target" to="detection_euclidian_clustering/output"/>
+    <remap from="~boxes" to="detection/output/boxes"/>
+    <remap from="~centroid_pose_array" to="detection/output/centroid"/>
+    <rosparam subst_value="true">
+      align_boxes: true
+      align_boxes_with_plane: false
+      force_to_flip_z_axis: false
+      use_pca: false
+      target_frame_id: $(arg target_frame_id)
+      approximate_sync: true
+      queue_size: 100
+      publish_tf: true
+    </rosparam>
+  </node>
+
   <include file="$(find jsk_perception)/launch/ofa_gui.launch" if="$(arg gui)" />
+
+  <node name="pass_through_button"
+        pkg="jsk_rqt_plugins" type="rqt_tabbed_buttons" output="screen" clear_params="true">
+    <rosparam command="load" file="$(find jsk_perception)/resources/pass_through_button_layout.yaml" />
+  </node>
 
 </launch>
